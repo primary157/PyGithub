@@ -29,7 +29,6 @@ def cache(function):
             cnx = None
         hashing = str(
             {"verb": args[0], "url": args[1], "parameters": parameters, "headers": headers, "input": input, "cnx": cnx})
-        """
         try:
             with open("arquivo.dat", "r") as file:
                 texto = json.loads(file.readline())
@@ -41,9 +40,6 @@ def cache(function):
         except FileNotFoundError:
             texto = {}
             existe = False
-        """
-        texto = {}
-        existe = False
         if not existe:
             retorno = function(self, args[0], args[1], parameters, headers, input, cnx)
             if len(retorno[1]) > 0:
