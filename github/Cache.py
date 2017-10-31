@@ -20,33 +20,40 @@ def cache(function):
         except KeyError:
             headers = None
         try:
-            input = kwargs["input"]
+            input_ = kwargs["input"]
         except KeyError:
-            input = None
+            input_ = None
         try:
             cnx = kwargs["cnx"]
         except KeyError:
             cnx = None
-        hashing = str(
-            {"verb": args[0], "url": args[1], "parameters": parameters, "headers": headers, "input": input, "cnx": cnx})
+        hashing = str(args[0]) + str(args[1]) + str(parameters) + str(headers) + str(input_) + str(cnx)
+        print(hashing)
         try:
             with open("arquivo.dat", "r") as file:
                 texto = json.loads(file.readline())
                 try:
                     retorno = texto[hashing]
                     existe = True
+                    print("ok2")
                 except KeyError:
                     existe = False
         except FileNotFoundError:
             texto = {}
             existe = False
         if not existe:
-            retorno = function(self, args[0], args[1], parameters, headers, input, cnx)
+            retorno = function(self, args[0], args[1], parameters, headers, input_, cnx)
+            with open("arquivo.dat", "w") as file:
+                texto[hashing] = retorno
+                file.write(json.dumps(texto))
+                print("ok1")
+            """
             if len(retorno[1]) > 0:
                 with open("arquivo.dat", "w") as file:
                     texto[hashing] = retorno
                     file.write(json.dumps(texto))
-                    print("ok")
+                    print("ok1")
+            """
         return retorno
 
     return wrapper
