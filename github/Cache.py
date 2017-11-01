@@ -28,14 +28,12 @@ def cache(function):
         except KeyError:
             cnx = None
         hashing = str(args[0]) + str(args[1]) + str(parameters) + str(headers) + str(input_) + str(cnx)
-        print(hashing)
         try:
             with open("arquivo.dat", "r") as file:
                 texto = json.loads(file.readline())
                 try:
                     retorno = texto[hashing]
                     existe = True
-                    print("ok2")
                 except KeyError:
                     existe = False
         except FileNotFoundError:
@@ -46,14 +44,6 @@ def cache(function):
             with open("arquivo.dat", "w") as file:
                 texto[hashing] = retorno
                 file.write(json.dumps(texto))
-                print("ok1")
-            """
-            if len(retorno[1]) > 0:
-                with open("arquivo.dat", "w") as file:
-                    texto[hashing] = retorno
-                    file.write(json.dumps(texto))
-                    print("ok1")
-            """
         return retorno
 
     return wrapper

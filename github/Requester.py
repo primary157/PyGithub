@@ -42,8 +42,6 @@ import sys
 import Consts
 import re
 import os
-import GithubException
-from Cache import cache
 
 atLeastPython26 = sys.hexversion >= 0x02060000
 atLeastPython3 = sys.hexversion >= 0x03000000
@@ -52,6 +50,9 @@ if atLeastPython26:
     import json
 else:  # pragma no cover (Covered by all tests with Python 2.5)
     import simplejson as json  # pragma no cover (Covered by all tests with Python 2.5)
+
+import GithubException
+from Cache import cache
 
 
 
