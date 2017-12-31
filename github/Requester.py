@@ -34,6 +34,8 @@
 # ##############################################################################
 
 import logging
+import socket
+
 import httplib
 import base64
 import urllib
@@ -278,17 +280,25 @@ class Requester:
         else:
             assert cnx == "status"
             cnx = self.__httpsConnectionClass("status.github.com", 443)
-        cnx.request(
-            verb,
-            url,
-            input,
-            requestHeaders
-        )
-        response = cnx.getresponse()
-
-        status = response.status
-        responseHeaders = dict((k.lower(), v) for k, v in response.getheaders())
-        output = response.read()
+        while True:
+            try:
+                cnx.request(
+                    verb,
+                    url,
+                    input,
+                    requestHeaders
+                )
+                response = cnx.getresponse()
+                status = response.status
+                responseHeaders = dict((k.lower(), v) for k, v in response.getheaders())
+                output = response.read()
+            except socket.error:
+                cnx.close()
+                cnx = self.__createConnection()
+                print("Falha!")
+            else:
+                print("Sucesso!")
+                break
 
         cnx.close()
 
