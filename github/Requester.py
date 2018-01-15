@@ -33,6 +33,7 @@
 #                                                                              #
 # ##############################################################################
 
+import socket
 import base64
 import httplib
 import json
@@ -50,7 +51,13 @@ import GithubException
 
 atLeastPython3 = sys.hexversion >= 0x03000000
 
+if atLeastPython26:
+    import json
+else:  # pragma no cover (Covered by all tests with Python 2.5)
+    import simplejson as json  # pragma no cover (Covered by all tests with Python 2.5)
 
+import GithubException
+from Cache import cache
 
 class Requester:
     __httpConnectionClass = httplib.HTTPConnection
@@ -123,13 +130,16 @@ class Requester:
 
     #############################################################
 
-    def __init__(self, login_or_token, password, base_url, timeout, client_id, client_secret, user_agent, per_page, api_preview):
+    def __init__(self, login_or_token, password, base_url, timeout, client_id, client_secret, user_agent, per_page,
+                 api_preview):
         self._initializeDebugFeature()
 
         if password is not None:
             login = login_or_token
             if atLeastPython3:
-                self.__authorizationHeader = "Basic " + base64.b64encode((login + ":" + password).encode("utf-8")).decode("utf-8").replace('\n', '')  # pragma no cover (Covered by Authentication.testAuthorizationHeaderWithXxx with Python 3)
+                self.__authorizationHeader = "Basic " + base64.b64encode(
+                    (login + ":" + password).encode("utf-8")).decode("utf-8").replace('\n',
+                                                                                      '')  # pragma no cover (Covered by Authentication.testAuthorizationHeaderWithXxx with Python 3)
             else:
                 self.__authorizationHeader = "Basic " + base64.b64encode(login + ":" + password).replace('\n', '')
         elif login_or_token is not None:
@@ -162,10 +172,11 @@ class Requester:
         self.__clientSecret = client_secret
 
         assert user_agent is not None, 'github now requires a user-agent. ' \
-            'See http://developer.github.com/v3/#user-agent-required'
+                                       'See http://developer.github.com/v3/#user-agent-required'
         self.__userAgent = user_agent
         self.__apiPreview = api_preview
 
+    @cache
     def requestJsonAndCheck(self, verb, url, parameters=None, headers=None, input=None, cnx=None):
         return self.__check(*self.requestJson(verb, url, parameters, headers, input, cnx))
 
@@ -202,11 +213,12 @@ class Requester:
         if len(data) == 0:
             return None
         else:
-            if atLeastPython3 and isinstance(data, bytes):  # pragma no branch (Covered by Issue142.testDecodeJson with Python 3)
+            if atLeastPython3 and isinstance(data,
+                                             bytes):  # pragma no branch (Covered by Issue142.testDecodeJson with Python 3)
                 data = data.decode("utf-8")  # pragma no cover (Covered by Issue142.testDecodeJson with Python 3)
             try:
                 return json.loads(data)
-            except ValueError, e:
+            except ValueError as e:
                 return {'data': data}
 
     def requestJson(self, verb, url, parameters=None, headers=None, input=None, cnx=None):
@@ -269,7 +281,8 @@ class Requester:
         status, responseHeaders, output = self.__requestRaw(cnx, verb, url, requestHeaders, encoded_input)
 
         if "x-ratelimit-remaining" in responseHeaders and "x-ratelimit-limit" in responseHeaders:
-            self.rate_limiting = (int(responseHeaders["x-ratelimit-remaining"]), int(responseHeaders["x-ratelimit-limit"]))
+            self.rate_limiting = (
+            int(responseHeaders["x-ratelimit-remaining"]), int(responseHeaders["x-ratelimit-limit"]))
         if "x-ratelimit-reset" in responseHeaders:
             self.rate_limiting_resettime = int(responseHeaders["x-ratelimit-reset"])
 
@@ -287,17 +300,25 @@ class Requester:
         else:
             assert cnx == "status"
             cnx = self.__httpsConnectionClass("status.github.com", 443)
-        cnx.request(
-            verb,
-            url,
-            input,
-            requestHeaders
-        )
-        response = cnx.getresponse()
-
-        status = response.status
-        responseHeaders = dict((k.lower(), v) for k, v in response.getheaders())
-        output = response.read()
+        while True:
+            try:
+                cnx.request(
+                    verb,
+                    url,
+                    input,
+                    requestHeaders
+                )
+                response = cnx.getresponse()
+                status = response.status
+                responseHeaders = dict((k.lower(), v) for k, v in response.getheaders())
+                output = response.read()
+            except socket.error:
+                cnx.close()
+                cnx = self.__createConnection()
+                print("Falha!")
+            else:
+                print("Sucesso!")
+                break
 
         cnx.close()
         if input:
@@ -376,5 +397,7 @@ class Requester:
                 elif requestHeaders["Authorization"].startswith("token"):
                     requestHeaders["Authorization"] = "token (oauth token removed)"
                 else:  # pragma no cover (Cannot happen, but could if we add an authentication method => be prepared)
-                    requestHeaders["Authorization"] = "(unknown auth removed)"  # pragma no cover (Cannot happen, but could if we add an authentication method => be prepared)
-            logger.debug("%s %s://%s%s %s %s ==> %i %s %s", str(verb), self.__scheme, self.__hostname, str(url), str(requestHeaders), str(input), status, str(responseHeaders), str(output))
+                    requestHeaders[
+                        "Authorization"] = "(unknown auth removed)"  # pragma no cover (Cannot happen, but could if we add an authentication method => be prepared)
+            logger.debug("%s %s://%s%s %s %s ==> %i %s %s", str(verb), self.__scheme, self.__hostname, str(url),
+                         str(requestHeaders), str(input), status, str(responseHeaders), str(output))
