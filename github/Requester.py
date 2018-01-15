@@ -49,6 +49,7 @@ from io import IOBase
 import Consts
 import GithubException
 
+atLeastPython26 = sys.hexversion >= 0x02060000
 atLeastPython3 = sys.hexversion >= 0x03000000
 
 if atLeastPython26:
