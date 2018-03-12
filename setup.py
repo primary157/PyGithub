@@ -33,11 +33,11 @@ version = "1.35"
 
 if __name__ == "__main__":
     setuptools.setup(
-        name="PyGithub",
+        name="PyGithubCached",
         version=version,
         description="Use the full Github API v3",
-        author="Vincent Jacques",
-        author_email="vincent@vincent-jacques.net",
+        author="Victor Guerra Veloso",
+        author_email="victorgvbh@gmail.com",
         url="http://pygithub.github.io/PyGithub/v1/index.html",
         long_description=textwrap.dedent("""\
             (Very short) Tutorial
