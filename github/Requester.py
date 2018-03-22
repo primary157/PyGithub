@@ -57,8 +57,8 @@ if atLeastPython26:
 else:  # pragma no cover (Covered by all tests with Python 2.5)
     import simplejson as json  # pragma no cover (Covered by all tests with Python 2.5)
 
-import GithubException
-from Cache import cache
+import github.GithubException
+from github.Cache import Cache
 
 class Requester:
     __httpConnectionClass = httplib.HTTPConnection
@@ -177,7 +177,7 @@ class Requester:
         self.__userAgent = user_agent
         self.__apiPreview = api_preview
 
-    @cache
+    @Cache
     def requestJsonAndCheck(self, verb, url, parameters=None, headers=None, input=None, cnx=None):
         return self.__check(*self.requestJson(verb, url, parameters, headers, input, cnx))
 
